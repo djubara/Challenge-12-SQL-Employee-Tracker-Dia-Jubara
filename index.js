@@ -1,7 +1,15 @@
 const Inquirer = require("inquirer");
 const connections = require("./lib/connections");
 
-function main() {
+// Welcome Banner
+console.log("");
+console.log(" =============================================");
+console.log("║ Welcome to the Employee Management System!  ║");
+console.log(" ============================================");
+console.log("");
+
+function manageEmployees() {
+
     Inquirer.prompt([
         {
             type: "list",
@@ -30,7 +38,7 @@ function main() {
             }
             else if (res.option === "Update Employee Role") {
                 console.log("Update Employee Role");
-                // updateEmployeeRole();
+                updateEmployeeRole();
             }
             else if (res.option === "View All Roles") {
                 console.log("View All Roles");
@@ -59,7 +67,7 @@ function main() {
             console.log(err);
         });
 }
-main();
+manageEmployees();
 
 let response;
 viewAllEmployees = async () => {
@@ -74,16 +82,22 @@ viewAllEmployees = async () => {
 
     }
 
-    main();
+    manageEmployees();
 }
 
 addEmployee = async () => {
     try {
         let client = await connections
         const roles = await client.query("SELECT * FROM role")
-        console.log(roles);
+
+        const managers = await client.query("SELECT * FROM employee")
+
         const roleChoices = roles.rows.map(role => ({ name: role.title, value: role.id }))
-        console.log(roleChoices);
+
+        const managerChoice = managers.rows.map(employee => ({ name: (employee.first_name + " " + employee.last_name), value: employee.id }))
+        console.log("manger choices", managerChoice);
+        console.log("role choices", roleChoices);
+
         const answers = await Inquirer.prompt([
             {
                 type: "input",
@@ -102,11 +116,13 @@ addEmployee = async () => {
                 name: "role_id",
                 choices: roleChoices
             },
-            // {
-            //     type: "input",
-            //     message: "Enter the employee's manager ID",
-            //     name: "manager_id"
-            // }
+            {
+                type: "list",
+                loop: false,
+                message: "Select the employee's manager:",
+                name: "manager_id",
+                choices: managerChoice
+            }
         ]);
         console.log(answers);
         response = await client.query(
@@ -124,27 +140,27 @@ addEmployee = async () => {
 
     }
     console.log("Add Employee");
-    main();
+    manageEmployees();
 }
 updateEmployeeRole = () => {
     console.log("Update Employee Role");
-    main();
+    manageEmployees();
 }
 viewAllRoles = () => {
     console.log("View All Roles");
-    main();
+    manageEmployees();
 }
 addRole = () => {
     console.log("Add Role");
-    main();
+    manageEmployees();
 }
 viewAllDepartments = () => {
     console.log("View All Departments");
-    main();
+    manageEmployees();
 }
 addDepartment = () => {
     console.log("Add Department");
-    main();
+    manageEmployees();
 }
 quit = () => {
     console.log("Goodbye!");
