@@ -28,7 +28,7 @@ function manageEmployees() {
     ])
         .then((res) => {
             if (res.option === "View All Employees") {
-                // console.log("View All Employees");
+
                 viewAllEmployees();
             }
 
@@ -69,15 +69,25 @@ manageEmployees();
 
 let response;
 viewAllEmployees = async () => {
+    console.log("");
     try {
         console.log("Viewing all Employees...");
         client = await connections;
-        response = await client.query("SELECT * FROM employee")
+        response = await client.query(`SELECT e.id as employee_id, 
+        e.first_name || ' ' || e.last_name AS employee,
+        m.first_name || ' ' || m.last_name AS manager, 
+        role.title AS job_title, 
+        department.department_name as Department, 
+        role.salary  from EMPLOYEE e
+        JOIN role ON e.role_id = role.id
+        JOIN department ON role.department_id = department.id
+        inner JOIN employee m on m.id = e.manager_id
+        ORDER BY department_id ASC`)
         console.log("");
         console.table(response.rows);
     }
     catch (err) {
-        console.log(err);
+        console.log(err)
 
     }
     manageEmployees();
@@ -85,6 +95,7 @@ viewAllEmployees = async () => {
 
 addEmployee = async () => {
     try {
+        console.log("");
         console.log("Adding an employee...");
         console.log("");
 
@@ -94,14 +105,18 @@ addEmployee = async () => {
         // Query the database for employees and roles
         const roles = await client.query("SELECT * FROM role")
 
-        const managers = await client.query("SELECT * FROM employee")
+        const managers = await client.query(`SELECT e.first_name || ' ' || e.last_name as Employee_name, 
+        role.title,
+        e.id as manager_id
+        FROM EMPLOYEE e
+        JOIN role ON e.role_id = role.id
+        WHERE role.title LIKE '%anager%' or role.title LIKE '%ead%'`)
+
+        // console.log("Managers", managers.rows);
 
         const roleChoices = roles.rows.map(role => ({ name: role.title, value: role.id }))
 
-        const managerChoice = managers.rows.map(employee => ({ name: (employee.first_name + " " + employee.last_name), value: employee.id }))
-
-        console.log("manger choices", managerChoice);
-        console.log("role choices", roleChoices);
+        const managerChoice = managers.rows.map(manager => ({ name: (manager.employee_name + " --- " + manager.title), value: manager.manager_id }))
 
         // Prompt user for the information of the employee to be added
         const answers = await Inquirer.prompt([
@@ -125,7 +140,7 @@ addEmployee = async () => {
             {
                 type: "list",
                 loop: false,
-                message: "Select the employee's manager:",
+                message: "Select the employee's manager: ",
                 name: "manager_id",
                 choices: managerChoice
             }
@@ -164,8 +179,8 @@ updateEmployeeRole = async () => {
 
         const roles = await client.query("SELECT * FROM role")
 
-        const roleChoices = roles.rows.map(role => ({ name: "Role title: " + role.title + "---" + "Role Id: " + role.id, value: role.id }));
-        const employeesChoices = employees.rows.map(employee => ({ name: employee.first_name + " " + employee.last_name + "---" + "Current Role: " + employee.role_id, value: employee.id }))
+        const roleChoices = roles.rows.map(role => ({ name: "Role title: " + role.title + " --- " + "Role Id: " + role.id, value: role.id }));
+        const employeesChoices = employees.rows.map(employee => ({ name: employee.first_name + " " + employee.last_name + " --- " + "Current Role: " + employee.role_id, value: employee.id }))
 
         console.log("role choices", roleChoices);
         console.log("employees choices", employeesChoices);
@@ -222,42 +237,42 @@ viewAllRoles = async () => {
     manageEmployees();
 }
 addRole = async () => {
-
     try {
         console.log("Adding a role...");
+        console.log("");
+        consol.log("Here are the current roles in the database")
         console.log("");
 
         // Establish connection to database
         let client = await connections
+        response = await client.query("SELECT * FROM role")
+        console.log("");
+        console.table(response.rows);
+        console.log("");
 
-        // Query the database for employees and roles
-        const roles = await client.query("SELECT * FROM role")
-
-        const managers = await client.query("SELECT * FROM employee")
-
-        const roleChoices = roles.rows.map(role => ({ name: role.title, value: role.id }))
+        // Query the database for roles
+        const newRole = roles.rows.map(role => ({ name: role.title, value: role.id, name: role.salary, value: role.department_id }))
 
         const managerChoice = managers.rows.map(employee => ({ name: (employee.first_name + " " + employee.last_name), value: employee.id }))
 
-        console.log("manger choices", managerChoice);
         console.log("role choices", roleChoices);
 
         // Prompt user for the information of the employee to be added
         const answers = await Inquirer.prompt([
             {
                 type: "input",
-                message: "Enter the employee's first name: ",
+                message: "Enter a title for the role: ",
                 name: "first_name"
             },
             {
                 type: "input",
-                message: "Enter the employee's last name: ",
+                message: "Enter a salary for the role: ",
                 name: "last_name"
             },
             {
                 type: "list",
                 loop: false,
-                message: "Enter the employee's role: ",
+                message: "Enter the name of the department: ",
                 name: "role_id",
                 choices: roleChoices
             },
@@ -299,5 +314,5 @@ addDepartment = () => {
 }
 quit = () => {
     console.log("Goodbye!");
-    // process.exit();
+    process.exit();
 }
