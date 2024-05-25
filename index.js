@@ -40,7 +40,7 @@ function manageEmployees() {
             }
             else if (res.option === "View All Roles") {
                 console.log("View All Roles");
-                // viewAllRoles();
+                viewAllRoles();
             }
             else if (res.option === "Add Role") {
                 console.log("Add Role");
@@ -85,7 +85,7 @@ viewAllEmployees = async () => {
 
 addEmployee = async () => {
     try {
-        console.log("Adding an Employee...");
+        console.log("Adding an employee...");
         console.log("");
 
         // Establish connection to database
@@ -152,7 +152,7 @@ addEmployee = async () => {
 }
 updateEmployeeRole = async () => {
     try {
-        console.log("Updating an Employee Role...");
+        console.log("Updating an employee role...");
         console.log("");
 
         // Establish connection to database
@@ -180,12 +180,6 @@ updateEmployeeRole = async () => {
                 name: "employee.id",
                 choices: employeesChoices
             },
-            // {
-            //     type: "list",
-            //     loop: false,
-            //     message: "Select the new role: ",
-            //     name: "OldRole_id",
-            // },
             {
                 type: "list",
                 loop: false,
@@ -193,19 +187,10 @@ updateEmployeeRole = async () => {
                 name: "role.id",
                 choices: roleChoices
             },
-            // {
-            //     type: "list",
-            //     loop: false,
-            //     message: "Will this employee have a new manager:",
-            //     name: "manager_id",
-            //     choices: managerChoice
-            // }
         ]);
 
-        console.log("After line 204", answers);
-
         // Update the employee's role in the database
-        // console.log("answers.employee.id", employee.id + "---" + "answers.role_id", role_id);
+
         response = await client.query(
             "Update employee set role_id = $2 where id = $1",
             [answers.employee.id, answers.role.id]
@@ -222,12 +207,86 @@ updateEmployeeRole = async () => {
     }
     manageEmployees();
 }
-viewAllRoles = () => {
-    console.log("View All Roles");
+viewAllRoles = async () => {
+    try {
+        console.log("Viewing all roles...");
+        client = await connections;
+        response = await client.query("SELECT * FROM role")
+        console.log("");
+        console.table(response.rows);
+    }
+    catch (err) {
+        console.log(err);
+
+    }
     manageEmployees();
 }
-addRole = () => {
-    console.log("Add Role");
+addRole = async () => {
+
+    try {
+        console.log("Adding a role...");
+        console.log("");
+
+        // Establish connection to database
+        let client = await connections
+
+        // Query the database for employees and roles
+        const roles = await client.query("SELECT * FROM role")
+
+        const managers = await client.query("SELECT * FROM employee")
+
+        const roleChoices = roles.rows.map(role => ({ name: role.title, value: role.id }))
+
+        const managerChoice = managers.rows.map(employee => ({ name: (employee.first_name + " " + employee.last_name), value: employee.id }))
+
+        console.log("manger choices", managerChoice);
+        console.log("role choices", roleChoices);
+
+        // Prompt user for the information of the employee to be added
+        const answers = await Inquirer.prompt([
+            {
+                type: "input",
+                message: "Enter the employee's first name: ",
+                name: "first_name"
+            },
+            {
+                type: "input",
+                message: "Enter the employee's last name: ",
+                name: "last_name"
+            },
+            {
+                type: "list",
+                loop: false,
+                message: "Enter the employee's role: ",
+                name: "role_id",
+                choices: roleChoices
+            },
+            {
+                type: "list",
+                loop: false,
+                message: "Select the employee's manager:",
+                name: "manager_id",
+                choices: managerChoice
+            }
+        ]);
+
+        console.log(answers);
+
+        // Insert the employee into the database
+        response = await client.query(
+            "insert into employee (first_name, last_name, role_id, manager_id) values ($1, $2, $3, $4)",
+            [answers.first_name, answers.last_name, answers.role_id, answers.manager_id]
+        );
+        console.log("");
+        console.table(response.rows);
+        console.log("");
+        response = await client.query("SELECT * FROM employee")
+        console.table(response.rows);
+    }
+    catch (err) {
+        console.log(err);
+
+    }
     manageEmployees();
 }
 viewAllDepartments = () => {
