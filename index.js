@@ -33,11 +33,9 @@ function manageEmployees() {
             }
 
             else if (res.option === "Add Employee") {
-                console.log("Add Employee");
                 addEmployee();
             }
             else if (res.option === "Update Employee Role") {
-                console.log("Update Employee Role");
                 updateEmployeeRole();
             }
             else if (res.option === "View All Roles") {
@@ -72,6 +70,7 @@ manageEmployees();
 let response;
 viewAllEmployees = async () => {
     try {
+        console.log("Viewing all Employees...");
         client = await connections;
         response = await client.query("SELECT * FROM employee")
         console.log("");
@@ -81,13 +80,18 @@ viewAllEmployees = async () => {
         console.log(err);
 
     }
-
     manageEmployees();
 }
 
 addEmployee = async () => {
     try {
+        console.log("Adding an Employee...");
+        console.log("");
+
+        // Establish connection to database
         let client = await connections
+
+        // Query the database for employees and roles
         const roles = await client.query("SELECT * FROM role")
 
         const managers = await client.query("SELECT * FROM employee")
@@ -95,9 +99,11 @@ addEmployee = async () => {
         const roleChoices = roles.rows.map(role => ({ name: role.title, value: role.id }))
 
         const managerChoice = managers.rows.map(employee => ({ name: (employee.first_name + " " + employee.last_name), value: employee.id }))
+
         console.log("manger choices", managerChoice);
         console.log("role choices", roleChoices);
 
+        // Prompt user for the information of the employee to be added
         const answers = await Inquirer.prompt([
             {
                 type: "input",
@@ -124,7 +130,10 @@ addEmployee = async () => {
                 choices: managerChoice
             }
         ]);
+
         console.log(answers);
+
+        // Insert the employee into the database
         response = await client.query(
             "insert into employee (first_name, last_name, role_id, manager_id) values ($1, $2, $3, $4)",
             [answers.first_name, answers.last_name, answers.role_id, answers.manager_id]
@@ -139,11 +148,78 @@ addEmployee = async () => {
         console.log(err);
 
     }
-    console.log("Add Employee");
     manageEmployees();
 }
-updateEmployeeRole = () => {
-    console.log("Update Employee Role");
+updateEmployeeRole = async () => {
+    try {
+        console.log("Updating an Employee Role...");
+        console.log("");
+
+        // Establish connection to database
+        let client = await connections
+
+        // Query the database for employees and roles
+
+        const employees = await client.query("SELECT * FROM employee")
+
+        const roles = await client.query("SELECT * FROM role")
+
+        const roleChoices = roles.rows.map(role => ({ name: "Role title: " + role.title + "---" + "Role Id: " + role.id, value: role.id }));
+        const employeesChoices = employees.rows.map(employee => ({ name: employee.first_name + " " + employee.last_name + "---" + "Current Role: " + employee.role_id, value: employee.id }))
+
+        console.log("role choices", roleChoices);
+        console.log("employees choices", employeesChoices);
+
+
+        // Prompt user for the information of the employee whose role is to be updated
+        const answers = await Inquirer.prompt([
+            {
+                type: "list",
+                loop: false,
+                message: "Select the employee whose role you would like to update: ",
+                name: "employee.id",
+                choices: employeesChoices
+            },
+            // {
+            //     type: "list",
+            //     loop: false,
+            //     message: "Select the new role: ",
+            //     name: "OldRole_id",
+            // },
+            {
+                type: "list",
+                loop: false,
+                message: "Select the employee's new role: ",
+                name: "role.id",
+                choices: roleChoices
+            },
+            // {
+            //     type: "list",
+            //     loop: false,
+            //     message: "Will this employee have a new manager:",
+            //     name: "manager_id",
+            //     choices: managerChoice
+            // }
+        ]);
+
+        console.log("After line 204", answers);
+
+        // Update the employee's role in the database
+        // console.log("answers.employee.id", employee.id + "---" + "answers.role_id", role_id);
+        response = await client.query(
+            "Update employee set role_id = $2 where id = $1",
+            [answers.employee.id, answers.role.id]
+        );
+        console.log("");
+        console.table(response.rows);
+        console.log("");
+        response = await client.query("SELECT * FROM employee")
+        console.table(response.rows);
+    }
+    catch (err) {
+        console.log(err);
+
+    }
     manageEmployees();
 }
 viewAllRoles = () => {
