@@ -28,7 +28,6 @@ function manageEmployees() {
     ])
         .then((res) => {
             if (res.option === "View All Employees") {
-
                 viewAllEmployees();
             }
 
@@ -43,8 +42,7 @@ function manageEmployees() {
                 viewAllRoles();
             }
             else if (res.option === "Add Role") {
-                console.log("Add Role");
-                // addRole();
+                addRole();
             }
             else if (res.option === "View All Departments") {
                 console.log("View All Departments");
@@ -116,7 +114,7 @@ addEmployee = async () => {
 
         const roleChoices = roles.rows.map(role => ({ name: role.title, value: role.id }))
 
-        const managerChoice = managers.rows.map(manager => ({ name: (manager.employee_name + " --- " + manager.title), value: manager.manager_id }))
+        const managerChoices = managers.rows.map(manager => ({ name: (manager.employee_name + " --- " + manager.title), value: manager.manager_id }))
 
         // Prompt user for the information of the employee to be added
         const answers = await Inquirer.prompt([
@@ -142,7 +140,7 @@ addEmployee = async () => {
                 loop: false,
                 message: "Select the employee's manager: ",
                 name: "manager_id",
-                choices: managerChoice
+                choices: managerChoices
             }
         ]);
 
@@ -238,65 +236,91 @@ viewAllRoles = async () => {
 }
 addRole = async () => {
     try {
-        console.log("Adding a role...");
-        console.log("");
-        consol.log("Here are the current roles in the database")
-        console.log("");
 
         // Establish connection to database
         let client = await connections
-        response = await client.query("SELECT * FROM role")
+
         console.log("");
-        console.table(response.rows);
+        console.log("Adding a new role to an existing department...");
+        console.log("");
+        console.info("M E S S A G E: To add a new role, you must first select a department to add the role to.");
+        console.log("");
+        console.info("M E S S A G E:: To add a new department, please select the 'Add Department' option from the main menu.");
+        console.log("");
+        console.log("Here are the current roles in the database: ");
         console.log("");
 
         // Query the database for roles
-        const newRole = roles.rows.map(role => ({ name: role.title, value: role.id, name: role.salary, value: role.department_id }))
+        const roles = await client.query("SELECT * FROM role")
+        const roleChoices = roles.rows.map(role => ({ name: role.title, value: role.id }))
+        // print the roles to the console
+        console.log("");
+        console.table(roles.rows);
+        console.log("");
 
-        const managerChoice = managers.rows.map(employee => ({ name: (employee.first_name + " " + employee.last_name), value: employee.id }))
 
-        console.log("role choices", roleChoices);
+        //testing roles choices
+        console.log("roles choices", roleChoices);
 
-        // Prompt user for the information of the employee to be added
+        // map the roles to a new array to be used in the inquirer prompt
+
+        //list the departments to choose from
+        const departments = await client.query("SELECT * FROM department")
+        const departmentChoices = departments.rows.map(department => ({ name: department.department_name, value: department.id }))
+        console.log("Here are the current departments in the department table: ")
+        console.log("");
+        console.table(departments.rows);
+        console.log("");
+
+        //testing department choices
+        console.log("department choices", departmentChoices);
+
+        // Prompt user for the information of the role to be added
         const answers = await Inquirer.prompt([
             {
-                type: "input",
-                message: "Enter a title for the role: ",
-                name: "first_name"
-            },
-            {
-                type: "input",
-                message: "Enter a salary for the role: ",
-                name: "last_name"
-            },
-            {
                 type: "list",
                 loop: false,
-                message: "Enter the name of the department: ",
-                name: "role_id",
-                choices: roleChoices
+                message: "Enter the name of the department for this role: ",
+                name: "department_name",
+                choices: departmentChoices
             },
             {
-                type: "list",
-                loop: false,
-                message: "Select the employee's manager:",
-                name: "manager_id",
-                choices: managerChoice
-            }
+                type: "input",
+                message: "Enter a title for the new role: ",
+                name: "title"
+            },
+            {
+                type: "input",
+                message: "Enter the salary for the new role: ",
+                name: "salary"
+            },
+            // {
+            //     type: "list",
+            //     loop: false,
+            //     message: "Select the employee's manager:",
+            //     name: "manager_id",
+            //     choices: managerChoice
+            // }
         ]);
 
         console.log(answers);
 
-        // Insert the employee into the database
-        response = await client.query(
-            "insert into employee (first_name, last_name, role_id, manager_id) values ($1, $2, $3, $4)",
-            [answers.first_name, answers.last_name, answers.role_id, answers.manager_id]
-        );
-        console.log("");
-        console.table(response.rows);
-        console.log("");
-        response = await client.query("SELECT * FROM employee")
-        console.table(response.rows);
+        // Insert the role into the role database
+        //     response = await client.query(
+        //         "insert into role (title, salary) values ($1, $2)",
+        //         [answers.title, answers.salary]
+        //     );
+        //     console.log("");
+        //     console.table(response.rows);
+        //     console.log("");
+        //     response = await client.query("SELECT * FROM role")
+        //     console.table(response.rows);
+        // }
+        // catch (err) {
+        //     console.log(err);
+
+        // }
+
     }
     catch (err) {
         console.log(err);
