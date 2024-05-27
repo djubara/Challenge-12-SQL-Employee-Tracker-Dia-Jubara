@@ -147,6 +147,7 @@ addEmployee = async () => {
         console.log(answers);
 
         // Insert the employee into the database
+        client = await connections;
         response = await client.query(
             "insert into employee (first_name, last_name, role_id, manager_id) values ($1, $2, $3, $4)",
             [answers.first_name, answers.last_name, answers.role_id, answers.manager_id]
@@ -180,8 +181,11 @@ updateEmployeeRole = async () => {
         const roleChoices = roles.rows.map(role => ({ name: "Role title: " + role.title + " --- " + "Role Id: " + role.id, value: role.id }));
         const employeesChoices = employees.rows.map(employee => ({ name: employee.first_name + " " + employee.last_name + " --- " + "Current Role: " + employee.role_id, value: employee.id }))
 
-        console.log("role choices", roleChoices);
-        console.log("employees choices", employeesChoices);
+        // testing role choices
+        // console.log("role choices", roleChoices);
+
+        // testing employee choices
+        // console.log("employees choices", employeesChoices);
 
 
         // Prompt user for the information of the employee whose role is to be updated
@@ -243,28 +247,22 @@ addRole = async () => {
         console.log("");
         console.log("Adding a new role to an existing department...");
         console.log("");
-        console.info("M E S S A G E: To add a new role, you must first select a department to add the role to.");
-        console.log("");
-        console.info("M E S S A G E:: To add a new department, please select the 'Add Department' option from the main menu.");
+        console.info("M E S S A G E: To add a new role, you must first select a department to add the role to.")
+        console.log("If the department you want to add the role to does not exist,");
+        console.log("you must first add the department to the department table.");
         console.log("");
         console.log("Here are the current roles in the database: ");
         console.log("");
 
-        // Query the database for roles
+        // Query the database for roles to display existing roles
         const roles = await client.query("SELECT * FROM role")
-        const roleChoices = roles.rows.map(role => ({ name: role.title, value: role.id }))
+        // const roleChoices = roles.rows.map(role => ({ name: role.title, value: role.id }))
         // print the roles to the console
         console.log("");
         console.table(roles.rows);
         console.log("");
 
-
-        //testing roles choices
-        console.log("roles choices", roleChoices);
-
-        // map the roles to a new array to be used in the inquirer prompt
-
-        //list the departments to choose from
+        //Query the database for departments to choose from
         const departments = await client.query("SELECT * FROM department")
         const departmentChoices = departments.rows.map(department => ({ name: department.department_name, value: department.id }))
         console.log("Here are the current departments in the department table: ")
@@ -272,8 +270,14 @@ addRole = async () => {
         console.table(departments.rows);
         console.log("");
 
-        //testing department choices
-        console.log("department choices", departmentChoices);
+        // testing department choices
+        // console.log("department choices", departmentChoices);
+
+
+        // testing roles choices
+        // console.log("roles choices", roleChoices);
+
+        // map the roles to a new array to be used in the inquirer prompt
 
         // Prompt user for the information of the role to be added
         const answers = await Inquirer.prompt([
@@ -287,47 +291,89 @@ addRole = async () => {
             {
                 type: "input",
                 message: "Enter a title for the new role: ",
-                name: "title"
+                name: "title",
+                validate: function (title) {
+                    // validate the title input
+                    const valid = /^[a-zA-Z]+$/;
+                    // return valid || "Please enter a valid title for the new role:";
+                    if (!title.match(valid)) {
+                        console.log("\n Please enter a valid title for the new role:");
+                        return false;
+                    }
+                    else {
+                        return true;
+                    }
+                },
             },
             {
                 type: "input",
-                message: "Enter the salary for the new role: ",
-                name: "salary"
+                message: "Enter the annual salary for the new role: ",
+                name: "salary",
+                validate: function (salary) {
+
+                    // const valid = /^[0-9]+$/; // regex for up to 6 digits and 2 decimal places;
+
+                    // validate the salary input
+                    let pay = parseFloat(salary);
+                    const notValid = isNaN(pay);
+                    // const notValid = isNaN(parseFloat(salary));
+                    // return valid || "Please enter a number:";
+
+                    const validUpperLimit = 1000000.00;
+                    const validLowerLimit = 10000.00;
+                    // regex for 4 numbers to the left of the decimal and 2 numbers to the right of the decimal 
+                    // const valid = /^\d{4}(\.\d{2})?$/;
+                    // regex for number with 2 decimal places: /^\d{7}(\.\d{2})?$/
+                    if (Salary = notValid || salary < validLowerLimit || salary > validUpperLimit) {
+                        console.log("\n Please enter a valid salary amount up to 6 digits and 2 decimal places: (i.e $123456.89)");
+                        return false;
+                    }
+                    else {
+                        console.log("Salary: ", salary);
+                        return true;
+                    }
+                }
             },
-            // {
-            //     type: "list",
-            //     loop: false,
-            //     message: "Select the employee's manager:",
-            //     name: "manager_id",
-            //     choices: managerChoice
-            // }
         ]);
-
+        title = answers.title.toLowerCase();
+        const firstLetter = title.charAt(0)
+        const firstLetterCap = firstLetter.toUpperCase()
+        const remainingLetters = title.slice(1)
+        const capitalizedWord = firstLetterCap + remainingLetters
+        console.log("\n Title: ", capitalizedWord);
+        answers.title = capitalizedWord;
         console.log(answers);
-
-        // Insert the role into the role database
-        //     response = await client.query(
-        //         "insert into role (title, salary) values ($1, $2)",
-        //         [answers.title, answers.salary]
-        //     );
-        //     console.log("");
-        //     console.table(response.rows);
-        //     console.log("");
-        //     response = await client.query("SELECT * FROM role")
-        //     console.table(response.rows);
-        // }
-        // catch (err) {
-        //     console.log(err);
-
-        // }
-
     }
     catch (err) {
         console.log(err);
-
     }
+    // Insert role into the database
+    let client = await connections
+
+    // response = await client.query(
+    //     "insert into role (department_id, title, salary) values ($1, $2, $3)",
+    //     [answers.department_id, answers.title, answers.salary]
+    // );
+
+    // validation
+    // Color validation function for hexadecimal input block
+    // function validateColorHex(answer) {
+    //     const hexColor = /^#[0-9A-Fa-f]{6}$/i;   Letters only: /^[a-zA-Z]+$/ numbers only: /^[0-9]+$/   regex for up to 7 digits and 2 decimal places: /^\d{7}(\.\d{2})?$/   
+    //     if (!answer.match(hexColor)) {
+    //         console.log("\n Please enter a valid hexadecimal number");
+    //         return false;
+    // regex for up to 7 digits and 2 decimal places: /^\d{7}(\.\d{2})?$/
+    //     }
+    //     else {
+    //         return true;
+    // regex for up to 7 digits and 2 decimal places: /^\d{7}(\.\d{2})?$/
+    // regex for no less than 2 digits and no more than 7 digits and 2 decimal places: /^\d{2,7}(\.\d{2})?$/
+
+
+    // console.log("Salary: ", answers.salary);
     manageEmployees();
-}
+};
+
 viewAllDepartments = () => {
     console.log("View All Departments");
     manageEmployees();
