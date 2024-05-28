@@ -396,7 +396,7 @@ addDepartment = async () => {
                 message: "Enter the name of the department: ",
                 name: "department_name",
                 validate: function (department_name) {
-                    // validate the title input
+                    // validate the department input
 
                     if (!department_name || department_name === '""' || department_name === "" || department_name === " " || department_name === null || department_name === undefined || department_name === "null" || department_name === "undefined" || department_name === ")") {
                         console.log("\n Please enter a valid department:");
