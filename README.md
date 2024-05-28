@@ -17,7 +17,13 @@
 
   To build a command-line application that tracks and manages a company's employee database using Node.js, Inquirer, and PostgreSQL.
 
+* **Screenshot:**
+
   ![image](./Assets/Employee_Tracker_ScreenShot.png)
+  
+   **Video:**
+
+  [![Watch the video]](https://app.screencastify.com/v3/watch/yGbpZ5ZHnWMTZKRjxaST)
 
   > ## Installation
 
