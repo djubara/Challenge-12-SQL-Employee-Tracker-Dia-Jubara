@@ -55,26 +55,24 @@ THEN I am prompted to select an employee to update and their new role and this i
 
   [![Watch the video]](https://app.screencastify.com/v3/watch/yGbpZ5ZHnWMTZKRjxaST)
 
-  > ## Installation
+> ## Installation
 
-  1. Clone the repository.
-  2. Install dependencies by typing `npm i` in the CLI.
-  3. Run `node index.js`
+1. Clone the repository.
+2. Install dependencies by typing `npm i` in the CLI.
+3. Run `node index.js`
 
-  > ## Usage
+> ## Usage
 
   Manage an employee database.
   
-  > ## How to Contribute
+> ## How to Contribute
 
   Create a pull request or raise an issue.
-  
-  >
 
-  > ## Test Instructions
+> ## Test Instructions
 
   N/A
   
-  > ## Questions
+> ## Questions
 
-  If you have any question please [djubara](https://github.com/djubara) or send me an email to: <djubara@hotmail.com>
+  If you have any question please visit my GitHub at [djubara](https://github.com/djubara) or send me an email to: <djubara@hotmail.com>
