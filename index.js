@@ -3,8 +3,8 @@ const connections = require("./lib/connections");
 
 // Welcome Banner
 console.log("");
-console.log(" =============================================");
-console.log("║ Welcome to the Employee Management System!  ║");
+console.log(" ============================================");
+console.log("║ Welcome to the Employee Management System! ║");
 console.log(" ============================================");
 console.log("");
 
@@ -45,12 +45,10 @@ function manageEmployees() {
                 addRole();
             }
             else if (res.option === "View All Departments") {
-                console.log("View All Departments");
-                // viewAllDepartments();
+                viewAllDepartments();
             }
             else if (res.option === "Add Department") {
-                console.log("Add Department");
-                // addDepartment();
+                addDepartment();
             }
             else if (res.option === "Quit") {
                 process.exit();
@@ -240,10 +238,6 @@ viewAllRoles = async () => {
 }
 addRole = async () => {
     try {
-
-        // Establish connection to database
-        let client = await connections
-
         console.log("");
         console.log("Adding a new role to an existing department...");
         console.log("");
@@ -254,11 +248,11 @@ addRole = async () => {
         console.log("Here are the current roles in the database: ");
         console.log("");
 
+        // Establish connection to database
+        let client = await connections
+
         // Query the database for roles to display existing roles
         const roles = await client.query("SELECT * FROM role")
-        // const roleChoices = roles.rows.map(role => ({ name: role.title, value: role.id }))
-        // print the roles to the console
-        console.log("");
         console.table(roles.rows);
         console.log("");
 
@@ -270,22 +264,13 @@ addRole = async () => {
         console.table(departments.rows);
         console.log("");
 
-        // testing department choices
-        // console.log("department choices", departmentChoices);
-
-
-        // testing roles choices
-        // console.log("roles choices", roleChoices);
-
-        // map the roles to a new array to be used in the inquirer prompt
-
         // Prompt user for the information of the role to be added
         const answers = await Inquirer.prompt([
             {
                 type: "list",
                 loop: false,
                 message: "Enter the name of the department for this role: ",
-                name: "department_name",
+                name: "department_id",
                 choices: departmentChoices
             },
             {
@@ -294,9 +279,8 @@ addRole = async () => {
                 name: "title",
                 validate: function (title) {
                     // validate the title input
-                    const valid = /^[a-zA-Z]+$/;
-                    // return valid || "Please enter a valid title for the new role:";
-                    if (!title.match(valid)) {
+
+                    if (!title || title === '""' || title === "" || title === " " || title === null || title === undefined || title === "null" || title === "undefined" || title === ")") {
                         console.log("\n Please enter a valid title for the new role:");
                         return false;
                     }
@@ -311,19 +295,13 @@ addRole = async () => {
                 name: "salary",
                 validate: function (salary) {
 
-                    // const valid = /^[0-9]+$/; // regex for up to 6 digits and 2 decimal places;
-
                     // validate the salary input
                     let pay = parseFloat(salary);
                     const notValid = isNaN(pay);
-                    // const notValid = isNaN(parseFloat(salary));
-                    // return valid || "Please enter a number:";
 
                     const validUpperLimit = 1000000.00;
                     const validLowerLimit = 10000.00;
-                    // regex for 4 numbers to the left of the decimal and 2 numbers to the right of the decimal 
-                    // const valid = /^\d{4}(\.\d{2})?$/;
-                    // regex for number with 2 decimal places: /^\d{7}(\.\d{2})?$/
+
                     if (Salary = notValid || salary < validLowerLimit || salary > validUpperLimit) {
                         console.log("\n Please enter a valid salary amount up to 6 digits and 2 decimal places: (i.e $123456.89)");
                         return false;
@@ -335,7 +313,9 @@ addRole = async () => {
                 }
             },
         ]);
-        title = answers.title.toLowerCase();
+
+        // capitalize the first letter of the title
+        const title = answers.title.toLowerCase();
         const firstLetter = title.charAt(0)
         const firstLetterCap = firstLetter.toUpperCase()
         const remainingLetters = title.slice(1)
@@ -343,45 +323,125 @@ addRole = async () => {
         console.log("\n Title: ", capitalizedWord);
         answers.title = capitalizedWord;
         console.log(answers);
+
+        // Capitalize the first letter of the title for each word
+        // const titleWords = answers.title.toLowerCase();
+        // answers.title = titleWords.split(" ");
+
+        // for (let i = 0; i < answers.title.length; i++) {
+        //     answers.title[i] = answers.title[i][0].toUpperCase() + answers.title[i].substr(1);
+        // }
+
+
+        // Insert role into the database
+        client = await connections;
+
+        console.log("\n ***Answers: ", answers);
+
+        response = await client.query(
+            "insert into role (department_id, title, salary) values ($1, $2, $3)",
+            [answers.department_id, capitalizedWord, answers.salary]
+        );
     }
     catch (err) {
         console.log(err);
     }
-    // Insert role into the database
-    let client = await connections
-
-    // response = await client.query(
-    //     "insert into role (department_id, title, salary) values ($1, $2, $3)",
-    //     [answers.department_id, answers.title, answers.salary]
-    // );
-
-    // validation
-    // Color validation function for hexadecimal input block
-    // function validateColorHex(answer) {
-    //     const hexColor = /^#[0-9A-Fa-f]{6}$/i;   Letters only: /^[a-zA-Z]+$/ numbers only: /^[0-9]+$/   regex for up to 7 digits and 2 decimal places: /^\d{7}(\.\d{2})?$/   
-    //     if (!answer.match(hexColor)) {
-    //         console.log("\n Please enter a valid hexadecimal number");
-    //         return false;
-    // regex for up to 7 digits and 2 decimal places: /^\d{7}(\.\d{2})?$/
-    //     }
-    //     else {
-    //         return true;
-    // regex for up to 7 digits and 2 decimal places: /^\d{7}(\.\d{2})?$/
-    // regex for no less than 2 digits and no more than 7 digits and 2 decimal places: /^\d{2,7}(\.\d{2})?$/
-
-
-    // console.log("Salary: ", answers.salary);
+    console.log("");
     manageEmployees();
 };
 
-viewAllDepartments = () => {
-    console.log("View All Departments");
+viewAllDepartments = async () => {
+    try {
+        console.log("");
+        console.log("Viewing all departments...");
+        client = await connections;
+        response = await client.query("SELECT id, department_name FROM department")
+        console.log("");
+        console.table(response.rows);
+    }
+    catch (err) {
+        console.log(err);
+    }
     manageEmployees();
 }
-addDepartment = () => {
-    console.log("Add Department");
+addDepartment = async () => {
+    try {
+        console.log("");
+        console.log("Adding a department to the department table...");
+        console.log("");
+
+        console.log("Here are the current departments in the database: ");
+        console.log("");
+
+        // Establish connection to database
+        let client = await connections
+
+        // Query the database for roles to display existing roles
+        const currentDepartments = await client.query("SELECT * FROM department")
+        console.table(currentDepartments.rows);
+        console.log("");
+
+        //Query the database for departments to choose from
+        // const departments = await client.query("SELECT * FROM department")
+        // const departmentChoices = departments.rows.map(department => ({ name: department.department_name, value: department.id }))
+        // console.log("Here are the current departments in the department table: ")
+        // console.log("");
+        // console.table(departments.rows);
+        // console.log("");
+
+        // Prompt user for the information of the role to be added
+        const answers = await Inquirer.prompt([
+            {
+                type: "input",
+                message: "Enter the name of the department: ",
+                name: "department_name",
+                validate: function (department_name) {
+                    // validate the title input
+
+                    if (!department_name || department_name === '""' || department_name === "" || department_name === " " || department_name === null || department_name === undefined || department_name === "null" || department_name === "undefined" || department_name === ")") {
+                        console.log("\n Please enter a valid department:");
+                        return false;
+                    }
+                    else {
+                        return true;
+                    }
+                },
+            },
+        ]);
+
+        // capitalize the first letter of the department name
+        const department_name = answers.department_name.toLowerCase();
+        const firstLetter = department_name.charAt(0)
+        const firstLetterCap = firstLetter.toUpperCase()
+        const remainingLetters = department_name.slice(1)
+        const capitalizedWord = firstLetterCap + remainingLetters
+        console.log("\n department_name: ", capitalizedWord);
+        answers.department_name = capitalizedWord;
+        console.log(answers);
+
+        // Capitalize the first letter of the department for each word
+        // const departmentWords = answers.title.toLowerCase();
+        // answers.department_name = departmentWords.split(" ");
+
+        // for (let i = 0; i < answers.departmentWords.length; i++) {
+        //     answers.departmentWords[i] = answers.departmentWords[i][0].toUpperCase() + answers.departmentWords[i].substr(1);
+        // }
+
+
+        // Insert department into the database
+        client = await connections;
+
+        response = await client.query(
+            "insert into department (department_name) values ($1)",
+            [answers.department_name]
+        );
+    }
+    catch (err) {
+        console.log(err);
+    }
+    console.log("");
     manageEmployees();
-}
+};
 quit = () => {
     console.log("Goodbye!");
     process.exit();
