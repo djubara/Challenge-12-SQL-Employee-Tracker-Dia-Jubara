@@ -280,13 +280,21 @@ addRole = async () => {
                 validate: function (title) {
                     // validate the title input
 
-                    if (!title || title === '""' || title === "" || title === " " || title === null || title === undefined || title === "null" || title === "undefined" || title === ")") {
+                    if (!title || title.trim().length === 0 || !/^[a-zA-Z\s]+$/.test(title)) {
                         console.log("\n Please enter a valid title for the new role:");
                         return false;
-                    }
-                    else {
+                    } else {
                         return true;
                     }
+
+
+                    // if (!title || title === '""' || title === "" || title === " " || title === null || title === undefined || title === "null" || title === "undefined" || title === ")") {
+                    //     console.log("\n Please enter a valid title for the new role:");
+                    //     return false;
+                    // }
+                    // else {
+                    //     return true;
+                    // }
                 },
             },
             {
@@ -321,7 +329,7 @@ addRole = async () => {
         const remainingLetters = title.slice(1)
         const capitalizedWord = firstLetterCap + remainingLetters
         console.log("\n Title: ", capitalizedWord);
-        answers.title = capitalizedWord;
+        // answers.title = capitalizedWord;
         console.log(answers);
 
         // Capitalize the first letter of the title for each word
@@ -336,7 +344,7 @@ addRole = async () => {
         // Insert role into the database
         client = await connections;
 
-        console.log("\n ***Answers: ", answers);
+        // console.log("\n ***Answers: ", answers);
 
         response = await client.query(
             "insert into role (department_id, title, salary) values ($1, $2, $3)",
